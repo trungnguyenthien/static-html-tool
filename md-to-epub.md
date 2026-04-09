@@ -1,29 +1,31 @@
 # Tóm tắt chức năng: Markdown → EPUB Converter (`md-to-epub.html`)
 
-Đây là một ứng dụng web chạy hoàn toàn trên trình duyệt, không cần máy chủ (client-side only), giúp chuyển đổi các file định dạng Markdown (`.md`, `.txt`) thành sách điện tử định dạng EPUB. 
+Đây là một ứng dụng web chạy trực tiếp trên trình duyệt, không cần tải phần mềm hay máy chủ (client-side only), giúp bạn chuyển đổi các file định dạng Markdown (`.md`, `.txt`) thành sách điện tử định dạng EPUB. 
 
-## Các tính năng chính
+## Cấu trúc và Tính năng cốt lõi
 
-1. **Chuyển đổi hàng loạt (Batch Processing)**
-   - Cho phép tải lên (kéo thả hoặc chọn file) nhiều file Markdown cùng một lúc.
-   - Hiển thị danh sách các file đang chờ xử lý và trạng thái của từng file (sẵn sàng, đang xử lý, lỗi, xong).
+1. **Quản lý & Chuyển đổi linh hoạt (Individual Conversion)**
+   - Cho phép tải lên (kéo thả hoặc tuỳ chọn) nhiều file Markdown cùng một lúc vào "Select Markdown files".
+   - Mỗi tệp có trạng thái độc lập và được xử lý riêng rẽ qua nút **"convert to EPUB"**.
 
-2. **Xử lý hình ảnh từ Internet**
-   - Tự động quét và nhúng ảnh được gắn dưới dạng URL (`http`/`https`) trong nội dung file Markdown.
-   - Hỗ trợ vượt qua ngăn chặn CORS (nhờ sử dụng public proxy api.allorigins.win) để đảm bảo trình duyệt có thể nhúng thành công và đưa thẳng vào tệp EPUB. (Những ảnh local trỏ tới đường dẫn máy tính sẽ bị bỏ qua).
+2. **Cơ chế thu thập ảnh tiên tiến**
+   - Tự động nhận diện và tải các đường link ảnh (`http`/`https`) trong cấu trúc Markdown để nhúng vào dạng base64 bên trong thư mục EPUB.
+   - Giải quyết triệt để lỗi Network (CORS) bằng **cơ chế Fallback thông qua 3 lớp Proxy Bypass** hoạt động tuần tự thay thế (gồm ngẫu nhiên `corsproxy` và `allorigins`, `codetabs`), chống lỗi nghẽn tải.
 
-3. **Xử lý văn bản & Tạo EPUB**
-   - Sử dụng thư viện `marked.js` để parse Markdown sang định dạng HTML (hỗ trợ Github Flavored Markdown).
-   - Tự thay thế linh hoạt đường dẫn ảnh trong Markdown bằng đường dẫn nội bộ (internal path) của ảnh được nhúng vào EPUB.
-   - Sử dụng thư viện `jszip` để nén các tệp nội dung, cấu trúc tệp bắt buộc của chuẩn EPUB (mimetype, META-INF/container.xml, nội dung xhtml, file ảnh opf & toc/nav).
-   - Có sẵn bộ CSS cơ bản (typography) giúp EPUB sau khi chuyển đổi có khả năng hiển thị đẹp mắt và dễ tiếp cận người đọc.
-   - Tự động tải xuống file `.epub` sau khi sinh ra hoàn tất.
+3. **Chuẩn hoá hiển thị văn bản (NFC Normalization)**
+   - Các tên file tiếng Việt có dấu khi gõ ở một số hệ điều hành (như thư mục macOS dùng chuỗi NFD bị tách rời dấu) sẽ được **tự động gộp chuẩn hoá**, tránh triệt để lỗi vỡ chữ trên giao diện hệ thống log và danh sách tệp đính kèm.
 
-4. **Giao diện & Trải nghiệm**
-   - Thiết kế trực quan, dễ thao tác với tông màu tối.
-   - Cung cấp log hệ thống trực tiếp (real-time log) về số lượng ảnh tải được, file nào thành công/bị lỗi chi tiết để người dùng dễ dàng theo dõi tiến độ.
+4. **Xử lý tài liệu và Đóng gói EPUB**
+   - Sử dụng `marked.js` để parse Markdown sang định dạng HTML một cách chính xác nhất, có hỗ trợ cú pháp Github Flavored Markdown.
+   - Sử dụng thư viện `jszip` tự động thiết lập và nén cấu trúc cây cho định dạng mở EPUB (như `META-INF`, `mimetype`, `nav/toc`,...).
+   - Nhúng sẵn bộ CSS thiết kế kiểu chữ (typography) thân thiện để eBook sinh ra hiển thị đẹp và dễ tiếp cận cho mắt người đọc trên các ứng dụng sách.
+   - Việc bắt đầu tải tệp về là tự động hoàn toàn khi xử lý xong tệp.
 
-## Thư viện và tài nguyên bên ngoài sử dụng
-- **JSZip (v3.10.1)**: Tạo và lưu cấu trúc thư mục dạng tập tin nén `.epub` (ZIP archive).
-- **Marked.js (v9.1.6)**: Parser cho Markdown hiển thị đầu ra HTML.
-- **Google Fonts**: Sử dụng `Playfair Display`, `JetBrains Mono`, `Crimson Pro` cho giao diện người dùng.
+5. **Giao diện & Theo dõi (Log Tracking)**
+   - UI với thiết kế Tối (Dark mode) rõ ràng, lược bỏ mọi phiền nhiễu và những cài đặt thủ công thừa thãi (Ngôn ngữ được ẩn định mặc định ở dạng `vi`).
+   - Tích hợp khung lưới hệ thống Log ghi chép trực tiếp trạng thái theo thời gian thực: File nào, ảnh gì thành công/thất bại, do lỗi gì để tiện theo dõi.
+
+## Thư viện và tài nguyên áp dụng
+- **JSZip (v3.10.1)**: Core API tạo và nén cấu trúc EPUB.
+- **Marked.js (v9.1.6)**: Core Parser cho Markdown -> HTML.
+- **Google Fonts**: Sử dụng `Playfair Display`, `JetBrains Mono`, `Crimson Pro` để đồng bộ UI ứng dụng.
